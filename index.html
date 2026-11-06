@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI-FCBGA-X2 사전 Risk Review</title>
+<style>
+:root{
+ --bg:#f4f6f9; --fg:#1b2430; --muted:#5d6978; --panel:#ffffff; --line:#dde2e9; --soft:#eef1f5;
+ --ok:#1d8a4b; --warn:#b87400; --bad:#c8312b; --accent:#1f3a5f;
+ --grid:#e6eaf0; --ref:#8b95a3; --dotmuted:#a3adba; --pop:#ffffff; --shadow:0 6px 20px rgba(20,30,45,.16);
+ --r:8px; color-scheme:light;
+ --sans:"Pretendard","Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,-apple-system,"Segoe UI",sans-serif;
+ --serif:"Noto Serif KR","Iowan Old Style",Georgia,Batang,serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#10151c; --fg:#e8ecf1; --muted:#9aa6b4; --panel:#18202a; --line:#2a3441; --soft:#1f2832;
+ --ok:#4cc27f; --warn:#e0a63a; --bad:#f06a63; --accent:#9db8e0; --grid:#243040; --ref:#7e8b9b; --dotmuted:#6a7686; --pop:#202a36; --shadow:0 6px 20px rgba(0,0,0,.5); color-scheme:dark;}}
+:root[data-theme="dark"]{
+ --bg:#10151c; --fg:#e8ecf1; --muted:#9aa6b4; --panel:#18202a; --line:#2a3441; --soft:#1f2832;
+ --ok:#4cc27f; --warn:#e0a63a; --bad:#f06a63; --accent:#9db8e0; --grid:#243040; --ref:#7e8b9b; --dotmuted:#6a7686; --pop:#202a36; --shadow:0 6px 20px rgba(0,0,0,.5); color-scheme:dark;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14.5px;line-height:1.5;
+ padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px),3vw);padding-right:max(16px,env(safe-area-inset-right,0px),3vw)}
+.wrap{max-width:1360px;margin-inline:auto;display:flex;flex-direction:column;gap:26px}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(1.45rem,3vw,2rem);margin:0;text-wrap:balance}
+h2{font-size:17px;margin:0;font-weight:600}
+h3{font-size:14.5px;margin:0;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted);font-size:12.5px}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+button{font:inherit;color:inherit}
+
+/* header */
+.head{padding-top:26px;display:flex;flex-direction:column;gap:12px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:12.5px;color:var(--muted)}
+.meta b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;font-size:12.5px}
+.chip b{font-weight:600}
+nav{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;margin-inline:calc(-1 * max(16px,3vw));padding-inline:max(16px,3vw)}
+nav a{padding:10px 12px;color:var(--muted);text-decoration:none;font-size:13px;white-space:nowrap;border-bottom:2px solid transparent}
+nav a:hover{color:var(--fg);border-bottom-color:var(--fg)}
+
+.sec{display:flex;flex-direction:column;gap:10px;scroll-margin-top:52px}
+.sec > header{display:flex;flex-direction:column;gap:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.grid3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr))}
+.grid5{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,10.5rem),1fr))}
+
+/* pills & dots */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;white-space:nowrap}
+.pill::before{content:"";width:.62rem;height:.62rem;border-radius:50%;background:var(--muted)}
+.lv-bad::before{background:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 22%,transparent)}
+.lv-warn::before{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 22%,transparent)}
+.lv-ok::before{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 22%,transparent)}
+.pill.plain::before{display:none}
+.need-y{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:600}
+.need-r{border-style:dashed;border-color:var(--fg)}
+.need-n{color:var(--muted)}
+.dot{width:.62rem;height:.62rem;border-radius:50%;display:inline-block}
+.dot.bad{background:var(--bad)}.dot.warn{background:var(--warn)}.dot.ok{background:var(--ok)}
+
+/* rule summary */
+.rsum{display:grid;gap:18px;grid-template-columns:minmax(0,1fr);}
+@media(min-width:900px){.rsum{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}}
+.rcount{display:flex;gap:14px;flex-wrap:wrap}
+.rc{flex:1 1 6.5rem;min-width:6.5rem;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:none;text-align:left;cursor:pointer}
+.rc:hover{background:var(--soft)}
+.rc .n{font-family:var(--serif);font-size:2.4rem;line-height:1.05;font-variant-numeric:tabular-nums}
+.rc .l{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.rc.bad .n{color:var(--bad)}
+.stack{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--soft);margin-top:14px}
+.stack i{display:block;height:100%}
+.stack .bad{background:var(--bad)}.stack .warn{background:var(--warn)}.stack .ok{background:var(--ok)}
+.worst{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.worst li{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line)}
+.worst li:last-child{border-bottom:0}
+.worst .id{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.worst .v{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.worst .v b{color:var(--bad)}
+
+/* top3 */
+.top{display:flex;flex-direction:column;gap:10px;border-top:3px solid var(--bad)}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rank{font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.rpn{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.rpn .big{font-family:var(--serif);font-size:2.2rem;line-height:1;color:var(--bad);font-variant-numeric:tabular-nums}
+.rpn .was{color:var(--muted);font-variant-numeric:tabular-nums}
+dl{display:grid;grid-template-columns:5.6rem 1fr;gap:4px 10px;font-size:12.5px;margin:0}
+dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}
+
+/* kpi */
+.kpi{display:flex;flex-direction:column;gap:4px;text-align:left;cursor:default}
+button.kpi{cursor:pointer;background:var(--panel)}
+button.kpi:hover{border-color:var(--fg)}
+.kpi .lab{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.kpi .num{font-family:var(--serif);font-size:2.4rem;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi .note{font-size:12.5px;color:var(--muted)}
+
+/* tables */
+.scroll{overflow:auto;max-width:100%}
+.scroll.tall{max-height:36rem}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:500;white-space:nowrap;z-index:1}
+th button{all:unset;cursor:pointer}
+th button:hover,th button:focus-visible{color:var(--fg);text-decoration:underline}
+th[aria-sort="ascending"] button::after{content:" ▲";font-size:.7em}
+th[aria-sort="descending"] button::after{content:" ▼";font-size:.7em}
+.num{text-align:right}
+td.wide{min-width:16rem}td.mid{min-width:11rem}
+tr.fresh td:first-child{box-shadow:inset 3px 0 0 var(--fg)}
+tr.viol td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+
+/* filters */
+.bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font-size:12.5px;display:inline-flex;gap:6px;align-items:center;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:var(--soft)}
+.seg button:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.seg .c{font-variant-numeric:tabular-nums;opacity:.75}
+.bar .lbl{font-size:12.5px;color:var(--muted)}
+select,input[type=search]{font:inherit;font-size:12.5px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--fg)}
+input[type=search]{min-width:13rem}
+label.tg{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;cursor:pointer}
+
+/* chart */
+.chart{position:relative;min-height:22rem}
+.tip{position:absolute;pointer-events:none;background:var(--pop);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:4px 8px;font-size:12.5px;max-width:18rem;z-index:3}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:5px;vertical-align:-1px}
+details{border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer}
+details ul{margin:10px 0 0;padding-left:1.2rem;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted);line-height:1.55}
+details ul b{color:var(--fg)}
+</style></head>
+<body>
+<div class="wrap">
+
+<header class="head">
+  <h1>AI-FCBGA-X2 사전 Risk Review</h1>
+  <div class="meta"><span>제품군 <b>Large body FCBGA (AI)</b></span><span>비교 기준 <b>AI-FCBGA-X</b></span><span>단계 <b>개발 착수 전 Risk review</b></span><span>기준일 <b>2026-11-06</b></span></div>
+  <div class="chips"><span class="chip">Body size <b>135 × 135 mm</b> (이전 85 × 85)</span><span class="chip">Fab node <b>2nm</b> (이전 3nm)</span><span class="chip">Bump pitch <b>100 µm</b> (이전 130 µm)</span></div>
+</header>
+
+<nav aria-label="섹션 이동">
+  <a href="#summary">Design rule 요약</a><a href="#top3">Risk 상위 3</a><a href="#kpi">핵심 지표</a><a href="#diff">변경점</a><a href="#rules">Design rule 점검</a><a href="#chart">RPN 변화</a><a href="#fmea">Risk 관리 표</a>
+</nav>
+
+<section class="sec" id="summary">
+  <header><h2>Design rule 위배 요약</h2><span class="muted">신규 설계값을 Design rule 기준과 비교한 결과입니다. 숫자를 누르면 아래 점검 표가 해당 판정으로 필터됩니다.</span></header>
+  <div class="card rsum">
+    <div>
+      <div class="rcount">
+        <button class="rc bad" type="button" data-j="위배"><div class="l"><i class="dot bad"></i>위배</div><div class="n" id="rs-bad">—</div></button>
+        <button class="rc" type="button" data-j="주의"><div class="l"><i class="dot warn"></i>주의</div><div class="n" id="rs-warn">—</div></button>
+        <button class="rc" type="button" data-j="준수"><div class="l"><i class="dot ok"></i>준수</div><div class="n" id="rs-ok">—</div></button>
+      </div>
+      <div class="stack" id="rs-stack" role="img" aria-label="판정 비율"></div>
+      <p class="muted" id="rs-note" style="margin-top:8px">—</p>
+    </div>
+    <div>
+      <h3>위배 항목 (기준 초과가 큰 순)</h3>
+      <ul class="worst" id="rs-worst"></ul>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="top3">
+  <header><h2>우선 대응이 필요한 Risk 3가지</h2><span class="muted">신규 RPN이 가장 높은 순서입니다.</span></header>
+  <div class="grid3" id="top3-cards"></div>
+</section>
+
+<section class="sec" id="kpi">
+  <header><h2>핵심 지표</h2><span class="muted">신규 제품 기준 FMEA 전체 항목입니다. Risk level 카드를 누르면 Risk 관리 표가 필터됩니다.</span></header>
+  <div class="grid5" id="kpi-cards"></div>
+</section>
+
+<section class="sec" id="diff">
+  <header><h2>이전 세대 대비 변경점</h2><span class="muted">기준 제품 AI-FCBGA-X와 신규 제품의 사양 차이와 Risk 영향입니다.</span></header>
+  <div class="card scroll">
+    <table><thead><tr><th>구분</th><th>항목</th><th>이전 세대</th><th>신규 제품</th><th>변화</th><th>Risk 영향</th><th>근거</th></tr></thead><tbody id="spec-body"></tbody></table>
+  </div>
+</section>
+
+<section class="sec" id="rules">
+  <header><h2>Design rule 점검</h2><span class="muted" id="rule-count">—</span></header>
+  <div class="bar">
+    <span class="lbl">판정</span>
+    <div class="seg" id="rule-seg" role="group" aria-label="판정 필터"></div>
+    <input type="search" id="rule-q" placeholder="Rule, 구분, 관련 Risk 검색" aria-label="Design rule 검색">
+  </div>
+  <div class="card scroll tall">
+    <table id="rule-tbl"><thead><tr>
+      <th><button type="button" data-k="rule_id">Rule ID</button></th><th><button type="button" data-k="category">구분</button></th><th><button type="button" data-k="rule">Design rule</button></th>
+      <th>기준</th><th>신규 설계값</th><th class="num"><button type="button" data-k="margin">여유율</button></th><th><button type="button" data-k="judge">판정</button></th>
+      <th>관련 Risk</th><th>필요 조치</th><th><button type="button" data-k="owner">담당</button></th>
+    </tr></thead><tbody id="rule-body"></tbody></table>
+  </div>
+</section>
+
+<section class="sec" id="chart">
+  <header><h2>RPN 변화 상위 10</h2><span class="muted">이전 세대 RPN(회색)에서 신규 RPN(색)으로의 변화입니다. 점선은 Risk level 구분 기준입니다.</span></header>
+  <div class="card">
+    <div class="legend"><span><i style="background:var(--dotmuted)"></i>이전 세대</span><span><i style="background:var(--bad)"></i>신규 높음</span><span><i style="background:var(--warn)"></i>신규 보통</span><span><i style="background:var(--ok)"></i>신규 낮음</span></div>
+    <div class="chart" id="rpn-chart"></div>
+  </div>
+</section>
+
+<section class="sec" id="fmea">
+  <header><h2>Risk 관리 표</h2><span class="muted" id="reg-count">—</span></header>
+  <div class="bar">
+    <span class="lbl">Risk level</span>
+    <div class="seg" id="lv-seg" role="group" aria-label="Risk level 필터"></div>
+    <span class="lbl">신규 Design 항목</span>
+    <select id="f-need" aria-label="신규 Design 필요 여부"><option value="">전체</option><option value="필요">필요</option><option value="검토">검토</option><option value="불필요">불필요</option></select>
+    <label class="tg"><input type="checkbox" id="f-viol"> Design rule 위배 연관만</label>
+    <input type="search" id="f-q" placeholder="공정, Failure mode, 요인 검색" aria-label="검색">
+  </div>
+  <div class="card scroll tall">
+    <table id="reg-tbl"><thead><tr>
+      <th><button type="button" data-k="fm_id">FM ID</button></th><th><button type="button" data-k="rpn_new">Risk level</button></th><th><button type="button" data-k="step">공정</button></th><th><button type="button" data-k="failure_mode">Failure mode</button></th>
+      <th class="num"><button type="button" data-k="rpn_prev">RPN 이전</button></th><th class="num"><button type="button" data-k="rpn_new">RPN 신규</button></th>
+      <th class="num"><button type="button" data-k="s_new">S</button></th><th class="num"><button type="button" data-k="o_new">O</button></th><th class="num"><button type="button" data-k="d_new">D</button></th>
+      <th><button type="button" data-k="drivers">변경 요인</button></th><th><button type="button" data-k="rule_viol_n">위배 Design rule</button></th><th><button type="button" data-k="design_need">신규 Design</button></th><th>신규 Design 항목</th><th>Risk 대응</th>
+    </tr></thead><tbody id="reg-body"></tbody></table>
+  </div>
+</section>
+
+<details>
+  <summary>평가 기준과 데이터</summary>
+  <ul>
+    <li><b>Risk level</b> 신규 RPN(S × O × D)이 200 이상이면 높음, 100 이상이면 보통, 그 미만이면 낮음입니다. 이전 세대 RPN에도 같은 기준을 적용합니다.</li>
+    <li><b>S/O/D 재평가</b> 이전 세대 FMEA 점수를 기준으로 Body size, Fab node, Bump pitch 변경이 각 Failure mode에 미치는 영향을 반영해 O(발생도)와 일부 S/D를 조정했습니다. 변경 요인 열에 근거를 표기했습니다.</li>
+    <li><b>Design rule 판정</b> 기준을 초과하면 위배, 기준 대비 여유가 10% 이하이면 주의, 그 외는 준수입니다. 위배 Rule과 연결된 Risk는 Risk 관리 표의 위배 Design rule 열에 표시됩니다.</li>
+    <li><b>신규 Design 항목</b> 필요는 현재 설계 규칙으로 대응할 수 없어 새 설계 항목이나 규칙이 필요한 경우, 검토는 평가 후 결정할 경우, 불필요는 기존 공정 관리로 대응 가능한 경우입니다.</li>
+    <li><b>예측값</b> Warpage, Bump 수량 등은 Body size와 Pitch 기준 스케일링 값이며 시뮬레이션 결과로 대체될 때까지의 값입니다.</li>
+    <li><b>데이터</b> FMEA DB와 Defect history DB(2024-01 ~ 2026-10)를 연계했습니다. 현재 표시 데이터는 샘플 DB 기준입니다.</li>
+  </ul>
+</details>
+
+</div>
+<script>
+const DATA = {"risk_register": [{"fm_id": "FM-020-03", "step": "Die/Bump Incoming", "failure_mode": "Die ELK delamination / cracking (Corner)", "effect": "Die 내부 회로 손상, 신뢰성 fail", "s_prev": 10, "o_prev": 4, "d_prev": 7, "rpn_prev": 280, "level_prev": "높음", "s_new": 10, "o_new": 7, "d_new": 8, "rpn_new": 560, "level_new": "높음", "rpn_delta": 280, "drivers": "Node 2nm / Body size ↑", "design_need": "필요", "design_item": "Die corner Keep-out, Crack-stop, ULK CPI 설계룰 신규 정의", "action": "신규 Die 대비 CPI FEA 재검증 및 DOE", "hist_events": 26, "hist_ppm": 618.4, "prev_gen_events": 14, "source": "기존 FMEA", "rule_viol": "DR-05", "rule_viol_n": 1}, {"fm_id": "FM-030-04", "step": "Flip Chip Attach(Reflow/TCB)", "failure_mode": "Reflow 후 Package warpage 과다 (Large body)", "effect": "후공정 Lid attach/Ball attach 불량", "s_prev": 8, "o_prev": 6, "d_prev": 5, "rpn_prev": 240, "level_prev": "높음", "s_new": 9, "o_new": 9, "d_new": 5, "rpn_new": 405, "level_new": "높음", "rpn_delta": 165, "drivers": "Body size ↑", "design_need": "필요", "design_item": "Warpage 대책 설계 (Stiffener, Core 재질, Lid 구조)", "action": "Large body warpage 가이드 + 재질 DOE", "hist_events": 34, "hist_ppm": 1502.8, "prev_gen_events": 10, "source": "기존 FMEA", "rule_viol": "DR-02, DR-09", "rule_viol_n": 2}, {"fm_id": "FM-060-01", "step": "Lid & TIM Attach", "failure_mode": "TIM void / 불균일 두께", "effect": "Rth 증가, Thermal throttling (AI 고발열)", "s_prev": 9, "o_prev": 5, "d_prev": 5, "rpn_prev": 225, "level_prev": "높음", "s_new": 9, "o_new": 7, "d_new": 5, "rpn_new": 315, "level_new": "높음", "rpn_delta": 90, "drivers": "Body size ↑ / Node (발열)", "design_need": "필요", "design_item": "대형 Lid/TIM 구조 재설계, 압력 분포 설계", "action": "TIM 재료 후보 비교(Gel / Indium / Pad)", "hist_events": 27, "hist_ppm": 1203.6, "prev_gen_events": 8, "source": "기존 FMEA", "rule_viol": "DR-12, DR-13", "rule_viol_n": 2}, {"fm_id": "FM-060-02", "step": "Lid & TIM Attach", "failure_mode": "TIM delamination / Pump-out", "effect": "Thermal degradation, 신뢰성 fail (TC/HTS)", "s_prev": 9, "o_prev": 5, "d_prev": 5, "rpn_prev": 225, "level_prev": "높음", "s_new": 9, "o_new": 7, "d_new": 5, "rpn_new": 315, "level_new": "높음", "rpn_delta": 90, "drivers": "Body size ↑ / Node (발열)", "design_need": "필요", "design_item": "TIM 재료 및 Lid 형상 재설계", "action": "TC 1000cycle 이후 Rth 모니터링", "hist_events": 29, "hist_ppm": 1290, "prev_gen_events": 14, "source": "기존 FMEA", "rule_viol": "DR-12, DR-13", "rule_viol_n": 2}, {"fm_id": "FM-030-01", "step": "Flip Chip Attach(Reflow/TCB)", "failure_mode": "Bump non-wet (NWO) / Cold joint", "effect": "Open fail, 신뢰성 저하", "s_prev": 9, "o_prev": 5, "d_prev": 4, "rpn_prev": 180, "level_prev": "보통", "s_new": 9, "o_new": 8, "d_new": 4, "rpn_new": 288, "level_new": "높음", "rpn_delta": 108, "drivers": "Body size ↑ / Pitch ↓", "design_need": "필요", "design_item": "TCB(NCF/MUF) 공정 전환에 맞는 Bump/Substrate 설계", "action": "TCB 적용 검토(대형 Die)", "hist_events": 30, "hist_ppm": 1376.5, "prev_gen_events": 13, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-070-02", "step": "Solder Ball Attach/Reflow", "failure_mode": "BGA coplanarity 불량 (Large body)", "effect": "SMT 실장 시 Open/HiP(Head-in-Pillow)", "s_prev": 9, "o_prev": 5, "d_prev": 4, "rpn_prev": 180, "level_prev": "보통", "s_new": 9, "o_new": 8, "d_new": 4, "rpn_new": 288, "level_new": "높음", "rpn_delta": 108, "drivers": "Body size ↑", "design_need": "필요", "design_item": "Ball grid/Carrier 설계 및 Coplanarity 규격 재정의", "action": "SMT 시뮬레이션 기반 Warpage spec", "hist_events": 29, "hist_ppm": 1356.5, "prev_gen_events": 12, "source": "기존 FMEA", "rule_viol": "DR-09, DR-14", "rule_viol_n": 2}, {"fm_id": "NEW-01", "step": "Micro-bump", "failure_mode": "Micro-bump(100um) Electromigration / 전류밀도 초과", "effect": "Bump open, 장기 신뢰성 열화", "s_prev": null, "o_prev": null, "d_prev": null, "rpn_prev": null, "level_prev": null, "s_new": 9, "o_new": 5, "d_new": 6, "rpn_new": 270, "level_new": "높음", "rpn_delta": null, "drivers": "Pitch ↓ / Node 2nm", "design_need": "필요", "design_item": "Bump EM 설계룰 및 전류 분배 설계 신규 정의", "action": "EM 시뮬레이션 + Daisy-chain 가속평가 계획 수립", "hist_events": 0, "hist_ppm": 0, "prev_gen_events": 0, "source": "신규 추가", "rule_viol": "DR-04", "rule_viol_n": 1}, {"fm_id": "FM-050-01", "step": "Underfill Dispense/Cure", "failure_mode": "Underfill void (Die 하부)", "effect": "Bump crack, 신뢰성 저하", "s_prev": 8, "o_prev": 5, "d_prev": 4, "rpn_prev": 160, "level_prev": "보통", "s_new": 8, "o_new": 8, "d_new": 4, "rpn_new": 256, "level_new": "높음", "rpn_delta": 96, "drivers": "Pitch ↓ (Gap ↓) / Body size ↑", "design_need": "필요", "design_item": "Gap 축소 대응 UF 공정(MUF/NCF) 및 Die-Substrate Gap 설계", "action": "Void 규격 정량화(면적 %) 및 SPC", "hist_events": 32, "hist_ppm": 1303.3, "prev_gen_events": 12, "source": "기존 FMEA", "rule_viol": "DR-03", "rule_viol_n": 1}, {"fm_id": "FM-010-03", "step": "Substrate IQC", "failure_mode": "Substrate micro-via crack / open", "effect": "Open fail, 간헐적 신호 불량(AI HSIO)", "s_prev": 9, "o_prev": 3, "d_prev": 6, "rpn_prev": 162, "level_prev": "보통", "s_new": 9, "o_new": 4, "d_new": 7, "rpn_new": 252, "level_new": "높음", "rpn_delta": 90, "drivers": "Body size ↑", "design_need": "검토", "design_item": "대면적 대응 Via 구조/Stack 재설계", "action": "Daisy-chain coupon lot별 TC 평가", "hist_events": 10, "hist_ppm": 99.7, "prev_gen_events": 5, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-050-02", "step": "Underfill Dispense/Cure", "failure_mode": "Underfill delamination (Die/Substrate interface)", "effect": "Bump fatigue, Open fail", "s_prev": 9, "o_prev": 5, "d_prev": 4, "rpn_prev": 180, "level_prev": "보통", "s_new": 9, "o_new": 7, "d_new": 4, "rpn_new": 252, "level_new": "높음", "rpn_delta": 72, "drivers": "Body size ↑ / Node", "design_need": "필요", "design_item": "UF 재료 재선정(저CTE·고접착) 및 Fillet 설계", "action": "신규 UF 후보 3종 Screening DOE", "hist_events": 35, "hist_ppm": 1715.6, "prev_gen_events": 15, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-110-04", "step": "Reliability Qual", "failure_mode": "Power Cycling 후 TIM degradation / Hot spot", "effect": "Thermal 열화", "s_prev": 9, "o_prev": 5, "d_prev": 4, "rpn_prev": 180, "level_prev": "보통", "s_new": 9, "o_new": 7, "d_new": 4, "rpn_new": 252, "level_new": "높음", "rpn_delta": 72, "drivers": "Node 2nm (전력밀도 ↑)", "design_need": "필요", "design_item": "Heat spreader/Cold plate 대응 Lid 설계", "action": "Power cycle 3000cy 평가", "hist_events": 17, "hist_ppm": 970.8, "prev_gen_events": 5, "source": "기존 FMEA", "rule_viol": "DR-12", "rule_viol_n": 1}, {"fm_id": "FM-110-01", "step": "Reliability Qual", "failure_mode": "TC (-55~125C) 중 Solder joint crack / UF crack", "effect": "Field fail 위험", "s_prev": 10, "o_prev": 4, "d_prev": 4, "rpn_prev": 160, "level_prev": "보통", "s_new": 10, "o_new": 6, "d_new": 4, "rpn_new": 240, "level_new": "높음", "rpn_delta": 80, "drivers": "Body size ↑ / Pitch ↓", "design_need": "필요", "design_item": "Bump 구조/UF 재료 재설계 및 Qual 계획 재수립", "action": "신규 구조 Qual 계획 수립", "hist_events": 24, "hist_ppm": 724.8, "prev_gen_events": 9, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "NEW-02", "step": "Die Thermal", "failure_mode": "2nm Die hot spot (전력밀도 ↑)로 국부 과열", "effect": "Thermal throttling, 수명 저하", "s_prev": null, "o_prev": null, "d_prev": null, "rpn_prev": null, "level_prev": null, "s_new": 9, "o_new": 5, "d_new": 5, "rpn_new": 225, "level_new": "높음", "rpn_delta": null, "drivers": "Node 2nm", "design_need": "필요", "design_item": "Die 온도센서 배치 및 Power domain 열 설계", "action": "Thermal test chip 평가, Lid/TIM 설계와 연동", "hist_events": 0, "hist_ppm": 0, "prev_gen_events": 0, "source": "신규 추가", "rule_viol": "DR-05, DR-12", "rule_viol_n": 2}, {"fm_id": "FM-010-01", "step": "Substrate IQC", "failure_mode": "Substrate incoming warpage 규격 초과", "effect": "FC Attach 시 bump non-wet / Lid 접착불량", "s_prev": 8, "o_prev": 4, "d_prev": 4, "rpn_prev": 128, "level_prev": "보통", "s_new": 8, "o_new": 7, "d_new": 4, "rpn_new": 224, "level_new": "높음", "rpn_delta": 96, "drivers": "Body size ↑", "design_need": "필요", "design_item": "고강성 Core(Glass/고탄성) 및 Stiffener ring 도입 검토", "action": "Large body 전용 warpage limit(RT/Peak) 재정의", "hist_events": 28, "hist_ppm": 764.7, "prev_gen_events": 11, "source": "기존 FMEA", "rule_viol": "DR-01, DR-02, DR-09", "rule_viol_n": 3}, {"fm_id": "FM-060-03", "step": "Lid & TIM Attach", "failure_mode": "Lid sealant adhesion 불량 / Lid tilt", "effect": "Lid 이탈, Warpage 악화", "s_prev": 8, "o_prev": 4, "d_prev": 4, "rpn_prev": 128, "level_prev": "보통", "s_new": 8, "o_new": 6, "d_new": 4, "rpn_new": 192, "level_new": "보통", "rpn_delta": 64, "drivers": "Body size ↑", "design_need": "검토", "design_item": "Sealant 도포 패턴 / Lid 접착 면적 설계", "action": "Lid shear 샘플 빈도 상향", "hist_events": 21, "hist_ppm": 438.9, "prev_gen_events": 8, "source": "기존 FMEA", "rule_viol": "DR-13", "rule_viol_n": 1}, {"fm_id": "FM-110-05", "step": "Reliability Qual", "failure_mode": "기계 충격 후 Lid 이탈 / Solder joint crack", "effect": "Field fail", "s_prev": 8, "o_prev": 3, "d_prev": 4, "rpn_prev": 96, "level_prev": "낮음", "s_new": 8, "o_new": 6, "d_new": 4, "rpn_new": 192, "level_new": "보통", "rpn_delta": 96, "drivers": "Body size ↑ (질량 ↑)", "design_need": "필요", "design_item": "Lid/Stiffener 기계 보강 설계", "action": "-", "hist_events": 9, "hist_ppm": 139.6, "prev_gen_events": 3, "source": "기존 FMEA", "rule_viol": "DR-02", "rule_viol_n": 1}, {"fm_id": "FM-010-04", "step": "Substrate IQC", "failure_mode": "Substrate trace short / open (2/2um급 미세회로)", "effect": "Electrical fail, 수율 저하", "s_prev": 9, "o_prev": 3, "d_prev": 3, "rpn_prev": 81, "level_prev": "낮음", "s_new": 9, "o_new": 5, "d_new": 4, "rpn_new": 180, "level_new": "보통", "rpn_delta": 99, "drivers": "Pitch ↓", "design_need": "필요", "design_item": "Fine L/S 설계룰 및 RDL 구조 재정의", "action": "공급사 Yield 월별 리뷰", "hist_events": 15, "hist_ppm": 246, "prev_gen_events": 7, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-070-05", "step": "Solder Ball Attach/Reflow", "failure_mode": "Reflow 중 UF/Die 재 Delamination (2nd reflow 영향)", "effect": "신뢰성 불량", "s_prev": 9, "o_prev": 4, "d_prev": 4, "rpn_prev": 144, "level_prev": "보통", "s_new": 9, "o_new": 5, "d_new": 4, "rpn_new": 180, "level_new": "보통", "rpn_delta": 36, "drivers": "Body size ↑", "design_need": "검토", "design_item": "2nd reflow 후 SAT 비교 평가 설계 반영", "action": "Reflow 전후 SAT 비교", "hist_events": 18, "hist_ppm": 412.3, "prev_gen_events": 5, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-040-01", "step": "Flux Cleaning", "failure_mode": "Flux residue 잔류", "effect": "UF void / Delamination 유발", "s_prev": 6, "o_prev": 4, "d_prev": 5, "rpn_prev": 120, "level_prev": "보통", "s_new": 6, "o_new": 6, "d_new": 5, "rpn_new": 180, "level_new": "보통", "rpn_delta": 60, "drivers": "Pitch ↓ (Gap ↓)", "design_need": "검토", "design_item": "저잔사 Flux/세정 가능 Gap 설계 검토", "action": "잔사 FTIR 분석 주기 확립", "hist_events": 20, "hist_ppm": 359.1, "prev_gen_events": 7, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-050-05", "step": "Underfill Dispense/Cure", "failure_mode": "UF crack / Filler 침강", "effect": "Die 하부 응력 분포 불균일", "s_prev": 7, "o_prev": 3, "d_prev": 5, "rpn_prev": 105, "level_prev": "보통", "s_new": 7, "o_new": 5, "d_new": 5, "rpn_new": 175, "level_new": "보통", "rpn_delta": 70, "drivers": "Pitch ↓ (Filler 크기)", "design_need": "검토", "design_item": "UF Filler 크기 vs Gap 적합성 평가", "action": "UF 재료 Lot 입고 검사 강화", "hist_events": 15, "hist_ppm": 212.8, "prev_gen_events": 6, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-030-02", "step": "Flip Chip Attach(Reflow/TCB)", "failure_mode": "Bump bridging (Fine pitch 130um)", "effect": "Short fail", "s_prev": 9, "o_prev": 3, "d_prev": 3, "rpn_prev": 81, "level_prev": "낮음", "s_new": 9, "o_new": 6, "d_new": 3, "rpn_new": 162, "level_new": "보통", "rpn_delta": 81, "drivers": "Pitch ↓", "design_need": "필요", "design_item": "Cu pillar CD / Solder volume 설계 재조정", "action": "Bridging 전용 X-ray recipe 추가", "hist_events": 19, "hist_ppm": 206.1, "prev_gen_events": 7, "source": "기존 FMEA", "rule_viol": "DR-03", "rule_viol_n": 1}, {"fm_id": "FM-090-02", "step": "Final Electrical Test", "failure_mode": "HSIO eye/BER margin 부족 (AI High speed)", "effect": "성능 미달, Bin down", "s_prev": 8, "o_prev": 4, "d_prev": 3, "rpn_prev": 96, "level_prev": "낮음", "s_new": 9, "o_new": 6, "d_new": 3, "rpn_new": 162, "level_new": "보통", "rpn_delta": 66, "drivers": "Node 2nm (고속 I/O)", "design_need": "필요", "design_item": "Substrate SI 설계 변경 (Via/Plane, Layer 구성)", "action": "SLT coverage 확대", "hist_events": 17, "hist_ppm": 319.2, "prev_gen_events": 7, "source": "기존 FMEA", "rule_viol": "DR-17", "rule_viol_n": 1}, {"fm_id": "FM-090-03", "step": "Final Electrical Test", "failure_mode": "PDN 임피던스 / IR drop 초과", "effect": "Performance 저하, Power fail", "s_prev": 8, "o_prev": 3, "d_prev": 3, "rpn_prev": 72, "level_prev": "낮음", "s_new": 9, "o_new": 6, "d_new": 3, "rpn_new": 162, "level_new": "보통", "rpn_delta": 90, "drivers": "Node 2nm (전력밀도 ↑)", "design_need": "필요", "design_item": "PDN/Decap/Power plane 재설계", "action": "Substrate PI coupon 평가", "hist_events": 10, "hist_ppm": 93.1, "prev_gen_events": 3, "source": "기존 FMEA", "rule_viol": "DR-17", "rule_viol_n": 1}, {"fm_id": "FM-020-01", "step": "Die/Bump Incoming", "failure_mode": "Bump height 편차 / 누락", "effect": "Non-wet, Open", "s_prev": 8, "o_prev": 3, "d_prev": 3, "rpn_prev": 72, "level_prev": "낮음", "s_new": 8, "o_new": 5, "d_new": 4, "rpn_new": 160, "level_new": "보통", "rpn_delta": 88, "drivers": "Pitch ↓", "design_need": "필요", "design_item": "Micro-bump(100um) UBM/Cu pillar 높이 사양 재정의", "action": "Bump height Cpk≥1.67 관리", "hist_events": 12, "hist_ppm": 199.5, "prev_gen_events": 3, "source": "기존 FMEA", "rule_viol": "DR-03", "rule_viol_n": 1}, {"fm_id": "NEW-05", "step": "Die/Bump Incoming", "failure_mode": "2nm 대형 Die bow 및 Backside crack", "effect": "Bump coplanarity 악화, Die crack", "s_prev": null, "o_prev": null, "d_prev": null, "rpn_prev": null, "level_prev": null, "s_new": 8, "o_new": 4, "d_new": 5, "rpn_new": 160, "level_new": "보통", "rpn_delta": null, "drivers": "Node 2nm / Body size ↑", "design_need": "검토", "design_item": "Die 두께/Backgrind 스트레스 설계 검토", "action": "Die bow 측정 및 Dicing 조건 사전 DOE", "hist_events": 0, "hist_ppm": 0, "prev_gen_events": 0, "source": "신규 추가", "rule_viol": "DR-05", "rule_viol_n": 1}, {"fm_id": "FM-020-02", "step": "Die/Bump Incoming", "failure_mode": "Die edge chipping / backside crack", "effect": "Die crack 진행, 신뢰성 불량", "s_prev": 9, "o_prev": 3, "d_prev": 4, "rpn_prev": 108, "level_prev": "보통", "s_new": 9, "o_new": 4, "d_new": 4, "rpn_new": 144, "level_new": "보통", "rpn_delta": 36, "drivers": "Body size ↑ / Node", "design_need": "불필요", "design_item": "-", "action": "Large die(>700mm2) 전용 handling jig", "hist_events": 16, "hist_ppm": 246, "prev_gen_events": 3, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-110-02", "step": "Reliability Qual", "failure_mode": "HAST 후 Delamination / Leakage", "effect": "Field fail", "s_prev": 9, "o_prev": 3, "d_prev": 4, "rpn_prev": 108, "level_prev": "보통", "s_new": 9, "o_new": 4, "d_new": 4, "rpn_new": 144, "level_new": "보통", "rpn_delta": 36, "drivers": "Pitch ↓", "design_need": "불필요", "design_item": "-", "action": "-", "hist_events": 10, "hist_ppm": 179.5, "prev_gen_events": 3, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "NEW-03", "step": "Substrate", "failure_mode": "대면적(135mm) Substrate Panel 수율/Cost 및 Warpage 편차", "effect": "Substrate 단가 ↑, 공급 불안정", "s_prev": null, "o_prev": null, "d_prev": null, "rpn_prev": null, "level_prev": null, "s_new": 6, "o_new": 6, "d_new": 4, "rpn_new": 144, "level_new": "보통", "rpn_delta": null, "drivers": "Body size ↑", "design_need": "검토", "design_item": "Panel 활용도 고려한 Body size/Layer 구성 검토", "action": "공급사 135mm급 Capability 사전 평가", "hist_events": 0, "hist_ppm": 0, "prev_gen_events": 0, "source": "신규 추가", "rule_viol": "DR-01", "rule_viol_n": 1}, {"fm_id": "FM-010-02", "step": "Substrate IQC", "failure_mode": "Substrate SR residue / Pad 오염", "effect": "Bump wetting 불량, 접합 신뢰성 저하", "s_prev": 7, "o_prev": 3, "d_prev": 5, "rpn_prev": 105, "level_prev": "보통", "s_new": 7, "o_new": 4, "d_new": 5, "rpn_new": 140, "level_new": "보통", "rpn_delta": 35, "drivers": "Pitch ↓", "design_need": "불필요", "design_item": "-", "action": "Pad 표면 XPS 샘플링 도입", "hist_events": 19, "hist_ppm": 319.2, "prev_gen_events": 7, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "NEW-04", "step": "Flip Chip Attach", "failure_mode": "135mm급 Reflow/Bonder Carrier·Chamber 한계", "effect": "공정 적용 불가, Carrier warpage", "s_prev": null, "o_prev": null, "d_prev": null, "rpn_prev": null, "level_prev": null, "s_new": 7, "o_new": 5, "d_new": 4, "rpn_new": 140, "level_new": "보통", "rpn_delta": null, "drivers": "Body size ↑", "design_need": "필요", "design_item": "135mm 대응 Carrier/Tray 신규 설계", "action": "장비 Capability study 및 Carrier DOE", "hist_events": 0, "hist_ppm": 0, "prev_gen_events": 0, "source": "신규 추가", "rule_viol": "DR-01", "rule_viol_n": 1}, {"fm_id": "FM-110-03", "step": "Reliability Qual", "failure_mode": "HTS 후 IMC 과성장 / Kirkendall void", "effect": "Bump 강도 저하", "s_prev": 8, "o_prev": 3, "d_prev": 4, "rpn_prev": 96, "level_prev": "낮음", "s_new": 8, "o_new": 4, "d_new": 4, "rpn_new": 128, "level_new": "보통", "rpn_delta": 32, "drivers": "Pitch ↓ (Solder 체적 ↓)", "design_need": "검토", "design_item": "UBM 두께/IMC 한계 재평가", "action": "-", "hist_events": 7, "hist_ppm": 106.4, "prev_gen_events": 5, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-090-01", "step": "Final Electrical Test", "failure_mode": "Open/Short (Daisy chain / Final test)", "effect": "수율 손실, 출하 불가", "s_prev": 8, "o_prev": 5, "d_prev": 2, "rpn_prev": 80, "level_prev": "낮음", "s_new": 8, "o_new": 7, "d_new": 2, "rpn_new": 112, "level_new": "보통", "rpn_delta": 32, "drivers": "Pitch ↓ / Body size ↑", "design_need": "불필요", "design_item": "-", "action": "Test coverage 분석", "hist_events": 29, "hist_ppm": 857.8, "prev_gen_events": 14, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-090-04", "step": "Final Electrical Test", "failure_mode": "Socket contact 불량 / False fail", "effect": "Yield loss (과검)", "s_prev": 5, "o_prev": 5, "d_prev": 3, "rpn_prev": 75, "level_prev": "낮음", "s_new": 5, "o_new": 7, "d_new": 3, "rpn_new": 105, "level_new": "보통", "rpn_delta": 30, "drivers": "Body size ↑", "design_need": "필요", "design_item": "135mm급 Test socket/Handler 신규 설계", "action": "Retest 분석 자동화", "hist_events": 17, "hist_ppm": 551.9, "prev_gen_events": 8, "source": "기존 FMEA", "rule_viol": "DR-15", "rule_viol_n": 1}, {"fm_id": "FM-050-03", "step": "Underfill Dispense/Cure", "failure_mode": "UF fillet 높이/폭 불량 / Bleeding", "effect": "Lid 접착 방해, Keep-out zone 침범", "s_prev": 6, "o_prev": 4, "d_prev": 3, "rpn_prev": 72, "level_prev": "낮음", "s_new": 6, "o_new": 5, "d_new": 3, "rpn_new": 90, "level_new": "낮음", "rpn_delta": 18, "drivers": "Body size ↑", "design_need": "불필요", "design_item": "-", "action": "Fillet 3D 측정", "hist_events": 19, "hist_ppm": 498.7, "prev_gen_events": 5, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-030-03", "step": "Flip Chip Attach(Reflow/TCB)", "failure_mode": "Die tilt / Shift (Placement 오차)", "effect": "Bump 접합 불균일, UF flow 불량", "s_prev": 7, "o_prev": 3, "d_prev": 3, "rpn_prev": 63, "level_prev": "낮음", "s_new": 7, "o_new": 4, "d_new": 3, "rpn_new": 84, "level_new": "낮음", "rpn_delta": 21, "drivers": "Pitch ↓", "design_need": "불필요", "design_item": "-", "action": "Tilt in-line 측정 추가", "hist_events": 16, "hist_ppm": 206.1, "prev_gen_events": 8, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-070-03", "step": "Solder Ball Attach/Reflow", "failure_mode": "Ball non-wet / Cold ball", "effect": "Open fail, 신뢰성 저하", "s_prev": 7, "o_prev": 3, "d_prev": 4, "rpn_prev": 84, "level_prev": "낮음", "s_new": 7, "o_new": 3, "d_new": 4, "rpn_new": 84, "level_new": "낮음", "rpn_delta": 0, "drivers": "-", "design_need": "불필요", "design_item": "-", "action": "Ball shear 샘플링", "hist_events": 15, "hist_ppm": 179.5, "prev_gen_events": 6, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-070-01", "step": "Solder Ball Attach/Reflow", "failure_mode": "Ball missing / Ball shift", "effect": "BGA open, 기판 실장 불량", "s_prev": 7, "o_prev": 3, "d_prev": 3, "rpn_prev": 63, "level_prev": "낮음", "s_new": 7, "o_new": 3, "d_new": 3, "rpn_new": 63, "level_new": "낮음", "rpn_delta": 0, "drivers": "-", "design_need": "불필요", "design_item": "-", "action": "Ball 누락 자동 Rework", "hist_events": 19, "hist_ppm": 339.1, "prev_gen_events": 5, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-080-02", "step": "Marking/Singulation", "failure_mode": "Singulation 중 Substrate crack / Chipping", "effect": "Fail, 신뢰성 저하", "s_prev": 7, "o_prev": 2, "d_prev": 3, "rpn_prev": 42, "level_prev": "낮음", "s_new": 7, "o_new": 3, "d_new": 3, "rpn_new": 63, "level_new": "낮음", "rpn_delta": 21, "drivers": "Body size ↑", "design_need": "불필요", "design_item": "-", "action": "-", "hist_events": 5, "hist_ppm": 59.8, "prev_gen_events": 1, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-060-04", "step": "Lid & TIM Attach", "failure_mode": "Lid 위치 Shift / Rotation", "effect": "Cosmetic NG, 방열판 장착 간섭", "s_prev": 5, "o_prev": 3, "d_prev": 3, "rpn_prev": 45, "level_prev": "낮음", "s_new": 5, "o_new": 4, "d_new": 3, "rpn_new": 60, "level_new": "낮음", "rpn_delta": 15, "drivers": "Body size ↑", "design_need": "불필요", "design_item": "-", "action": "Lid Shift 자동 판정 도입", "hist_events": 13, "hist_ppm": 219.4, "prev_gen_events": 4, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-100-01", "step": "Final Visual/Pack", "failure_mode": "Package 외관 불량(Scratch/Contamination)", "effect": "Customer reject", "s_prev": 4, "o_prev": 4, "d_prev": 3, "rpn_prev": 48, "level_prev": "낮음", "s_new": 4, "o_new": 5, "d_new": 3, "rpn_new": 60, "level_new": "낮음", "rpn_delta": 12, "drivers": "Body size ↑", "design_need": "불필요", "design_item": "-", "action": "AOI 자동화", "hist_events": 9, "hist_ppm": 159.6, "prev_gen_events": 4, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-050-04", "step": "Underfill Dispense/Cure", "failure_mode": "UF cure 불량 (Under-cure)", "effect": "접착력 저하, Delamination", "s_prev": 7, "o_prev": 2, "d_prev": 4, "rpn_prev": 56, "level_prev": "낮음", "s_new": 7, "o_new": 2, "d_new": 4, "rpn_new": 56, "level_new": "낮음", "rpn_delta": 0, "drivers": "-", "design_need": "불필요", "design_item": "-", "action": "Cure 정도 샘플 DSC", "hist_events": 4, "hist_ppm": 53.2, "prev_gen_events": 3, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-070-04", "step": "Solder Ball Attach/Reflow", "failure_mode": "Ball bridging", "effect": "Short fail", "s_prev": 8, "o_prev": 2, "d_prev": 3, "rpn_prev": 48, "level_prev": "낮음", "s_new": 8, "o_new": 2, "d_new": 3, "rpn_new": 48, "level_new": "낮음", "rpn_delta": 0, "drivers": "-", "design_need": "불필요", "design_item": "-", "action": "-", "hist_events": 5, "hist_ppm": 39.9, "prev_gen_events": 4, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-100-02", "step": "Final Visual/Pack", "failure_mode": "Dry pack / HIC 이상", "effect": "MSL 이탈, 흡습", "s_prev": 6, "o_prev": 2, "d_prev": 3, "rpn_prev": 36, "level_prev": "낮음", "s_new": 6, "o_new": 2, "d_new": 3, "rpn_new": 36, "level_new": "낮음", "rpn_delta": 0, "drivers": "-", "design_need": "불필요", "design_item": "-", "action": "-", "hist_events": 2, "hist_ppm": 19.9, "prev_gen_events": 1, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-060-05", "step": "Lid & TIM Attach", "failure_mode": "Lid scratch / Dent / Plating 불량", "effect": "외관 NG", "s_prev": 3, "o_prev": 4, "d_prev": 3, "rpn_prev": 36, "level_prev": "낮음", "s_new": 3, "o_new": 4, "d_new": 3, "rpn_new": 36, "level_new": "낮음", "rpn_delta": 0, "drivers": "-", "design_need": "불필요", "design_item": "-", "action": "Lid 보호 필름 적용", "hist_events": 12, "hist_ppm": 252.7, "prev_gen_events": 5, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}, {"fm_id": "FM-080-01", "step": "Marking/Singulation", "failure_mode": "Laser mark 불량 / 오타", "effect": "Traceability 상실, 외관 NG", "s_prev": 3, "o_prev": 2, "d_prev": 2, "rpn_prev": 12, "level_prev": "낮음", "s_new": 3, "o_new": 2, "d_new": 2, "rpn_new": 12, "level_new": "낮음", "rpn_delta": 0, "drivers": "-", "design_need": "불필요", "design_item": "-", "action": "-", "hist_events": 4, "hist_ppm": 59.8, "prev_gen_events": 3, "source": "기존 FMEA", "rule_viol": "-", "rule_viol_n": 0}], "spec_compare": [{"category": "기본 사양", "item": "Body size", "prev": "85 × 85 mm", "new": "135 × 135 mm", "change": "+50 × +50 mm", "impact": "Warpage, Coplanarity, Lid/TIM 압력 분포, 장비 Capability 전반 악화", "basis": "설계 사양"}, {"category": "기본 사양", "item": "Body 면적", "prev": "7,225 mm²", "new": "18,225 mm²", "change": "+152%", "impact": "열/기계 응력이 면적 및 길이의 제곱에 비례해 증가", "basis": "예측값"}, {"category": "기본 사양", "item": "Fab node", "prev": "3nm", "new": "2nm", "change": "1 node 미세화", "impact": "ELK/ULK 취약, 전력밀도 ↑, CPI(Chip-Package Interaction) 응력 민감도 ↑", "basis": "설계 사양"}, {"category": "기본 사양", "item": "Bump pitch", "prev": "130 um", "new": "100 um", "change": "-23%", "impact": "Bridging, Non-wet, UF Gap/void, EM, Fine L/S 요구 ↑", "basis": "설계 사양"}, {"category": "파생 항목", "item": "Bump 밀도", "prev": "1.0x", "new": "약 1.7x", "change": "+69%", "impact": "Pitch 축소에 따른 단위면적당 Bump 수", "basis": "예측값"}, {"category": "파생 항목", "item": "총 Bump 수량", "prev": "기준", "new": "약 4.3x", "change": "+330%", "impact": "면적 × 밀도 동일 배치 기준", "basis": "예측값"}, {"category": "파생 항목", "item": "Warpage 예상 지수", "prev": "1.0x", "new": "약 2.5x", "change": "+150%", "impact": "Body 길이 제곱 비례 단순 스케일링", "basis": "예측값"}, {"category": "파생 항목", "item": "열 부하 (TDP 밀도)", "prev": "1.0x", "new": "약 1.6x", "change": "+60%", "impact": "2nm 고밀도 + 대면적 -> 국부 hot spot", "basis": "예측값"}, {"category": "구조", "item": "Substrate 구성", "prev": "18L (7-4-7)", "new": "20L (8-4-8)", "change": "+2L", "impact": "Via/Plane 구조 변경, 신호/전원 무결성 재설계 필요", "basis": "설계 사양"}, {"category": "구조", "item": "Lid / TIM", "prev": "Lid + TIM(Metal/Indium 후보)", "new": "대형 Lid (128mm)", "change": "재설계", "impact": "TIM void/Pump-out 및 압력 분포 대응", "basis": "설계 사양"}, {"category": "이력 근거", "item": "이전 세대 NPI 불량 건수", "prev": "AI-FCBGA-X: 273건", "new": "—", "change": "—", "impact": "Warpage·UF·TIM·ELK 항목이 상위, 신규 제품 Risk 보정 기준으로 사용", "basis": "Defect DB"}], "design_rules": [{"rule_id": "DR-01", "category": "Package", "rule": "Body size 최대", "limit": "≤ 100 mm", "value": "135 mm", "margin": -35.0, "judge": "위배", "related_fm": "FM-010-01, NEW-03, NEW-04", "action": "Substrate/장비 Capability 사전 협의 후 Design rule 예외 승인 또는 Body size 재검토", "owner": "Package Design"}, {"rule_id": "DR-02", "category": "Package", "rule": "Stiffener ring 적용 (Body 100mm 초과 시 필수)", "limit": "Body 100mm 초과 시 필수", "value": "미적용", "margin": null, "judge": "위배", "related_fm": "FM-010-01, FM-030-04, FM-110-05", "action": "Stiffener ring 구조 설계 반영 및 Warpage 시뮬레이션 재수행", "owner": "Package Design"}, {"rule_id": "DR-03", "category": "Bump", "rule": "Bump pitch 최소 (공정 검증 범위)", "limit": "≥ 130 µm", "value": "100 µm", "margin": -23.1, "judge": "위배", "related_fm": "FM-030-02, FM-020-01, FM-050-01", "action": "100µm pitch 공정 검증(TCB, UF) 계획 수립 및 규칙 신규 정의", "owner": "Bump / FC PE"}, {"rule_id": "DR-04", "category": "Bump", "rule": "Bump 전류밀도 (EM 한계)", "limit": "≤ 10 kA/cm²", "value": "12.5 kA/cm²", "margin": -25.0, "judge": "위배", "related_fm": "NEW-01", "action": "Power/Ground Bump 배치 재조정 및 EM 시뮬레이션", "owner": "Package Design"}, {"rule_id": "DR-05", "category": "Die", "rule": "검증된 Fab node 하한 (ELK CPI 검증 범위)", "limit": "≥ 3 nm", "value": "2 nm", "margin": -33.3, "judge": "위배", "related_fm": "FM-020-03, NEW-02, NEW-05", "action": "2nm Die CPI 평가(FEA + Test vehicle) 완료 전까지 설계 확정 보류", "owner": "Die / Reliability"}, {"rule_id": "DR-06", "category": "Die", "rule": "Die corner Keep-out 거리", "limit": "≥ 150 µm", "value": "175 µm", "margin": 16.7, "judge": "준수", "related_fm": "FM-020-03", "action": "-", "owner": "Package Design"}, {"rule_id": "DR-07", "category": "Substrate", "rule": "최소 Line/Space", "limit": "≥ 2 µm", "value": "2 µm", "margin": 0.0, "judge": "주의", "related_fm": "FM-010-04", "action": "공급사 Capability 확인, 여유 확보를 위해 일부 구간 L/S 완화 검토", "owner": "Substrate QA"}, {"rule_id": "DR-08", "category": "Substrate", "rule": "Layer 수 (공급사 Capability)", "limit": "≤ 20 L", "value": "20 L", "margin": 0.0, "judge": "주의", "related_fm": "FM-010-03, NEW-03", "action": "Layer 증가 없이 Routing 가능 여부 재검토", "owner": "Package Design"}, {"rule_id": "DR-09", "category": "Substrate", "rule": "Warpage @Peak (예측값)", "limit": "≤ 120 µm", "value": "300 µm", "margin": -150.0, "judge": "위배", "related_fm": "FM-010-01, FM-030-04, FM-070-02", "action": "Core 재질/두께 변경, Stiffener 적용 후 시뮬레이션 재확인", "owner": "Package Design"}, {"rule_id": "DR-10", "category": "Assembly", "rule": "UF Gap / Filler 최대 크기 비", "limit": "≥ 8 배", "value": "8.5 배", "margin": 6.2, "judge": "주의", "related_fm": "FM-050-01, FM-050-05", "action": "Filler 크기 축소 UF 후보 평가", "owner": "UF PE"}, {"rule_id": "DR-11", "category": "Assembly", "rule": "Reflow Peak 온도", "limit": "≤ 245 °C", "value": "220 °C", "margin": 10.2, "judge": "준수", "related_fm": "FM-030-01, FM-070-05", "action": "-", "owner": "FC PE"}, {"rule_id": "DR-12", "category": "Thermal", "rule": "Rth (Junction-Case)", "limit": "≤ 0.08 °C/W", "value": "0.095 °C/W", "margin": -18.8, "judge": "위배", "related_fm": "FM-060-01, FM-060-02, FM-110-04, NEW-02", "action": "TIM 재료(Metal TIM) 및 Lid 구조 변경으로 Rth 저감", "owner": "Thermal Design"}, {"rule_id": "DR-13", "category": "Thermal", "rule": "Lid 최대 크기 (TIM 압력 균일도)", "limit": "≤ 100 mm", "value": "128 mm", "margin": -28.0, "judge": "위배", "related_fm": "FM-060-01, FM-060-03, FM-060-02", "action": "다점 가압 Lid attach 및 Lid 구조(분할/Rib) 설계", "owner": "Lid/TIM PE"}, {"rule_id": "DR-14", "category": "BGA", "rule": "Package Coplanarity", "limit": "≤ 150 µm", "value": "210 µm", "margin": -40.0, "judge": "위배", "related_fm": "FM-070-02", "action": "Ball grid / Carrier 설계 변경 및 SMT 시뮬레이션", "owner": "BGA PE"}, {"rule_id": "DR-15", "category": "Test", "rule": "Test socket 총 접촉력", "limit": "≤ 1000 N", "value": "1400 N", "margin": -40.0, "judge": "위배", "related_fm": "FM-090-04", "action": "Socket/Handler 신규 설계, 접촉력 저감 Pin 구조 평가", "owner": "Test PE"}, {"rule_id": "DR-16", "category": "Reliability", "rule": "MSL Level", "limit": "≤ 3", "value": "3", "margin": 0.0, "judge": "주의", "related_fm": "FM-070-05, FM-100-02", "action": "-", "owner": "Reliability Eng"}, {"rule_id": "DR-17", "category": "SI/PI", "rule": "HSIO 채널 삽입손실 (@Nyquist)", "limit": "≤ 12 dB", "value": "13.2 dB", "margin": -10.0, "judge": "위배", "related_fm": "FM-090-02, FM-090-03", "action": "Via/Plane 구조 및 Layer 구성 재설계", "owner": "SI/PI Design"}, {"rule_id": "DR-18", "category": "Bump", "rule": "UBM 두께", "limit": "≥ 3 µm", "value": "3.5 µm", "margin": 16.7, "judge": "준수", "related_fm": "FM-110-03", "action": "-", "owner": "Bump / FC PE"}, {"rule_id": "DR-19", "category": "BGA", "rule": "BGA ball pitch", "limit": "≥ 0.8 mm", "value": "1 mm", "margin": 25.0, "judge": "준수", "related_fm": "FM-070-01, FM-070-04", "action": "-", "owner": "BGA PE"}]};
+</script>
+<script>
+(() => {
+  const { risk_register: risk, spec_compare: spec, design_rules: rules } = DATA;
+  const THR = { high: 200, mid: 100 };
+  const LV = { '높음': 'lv-bad', '보통': 'lv-warn', '낮음': 'lv-ok' };
+  const JG = { '위배': 'lv-bad', '주의': 'lv-warn', '준수': 'lv-ok' };
+  const NEED = { '필요': 'need-y', '검토': 'need-r', '불필요': 'need-n' };
+  const $ = (id) => document.getElementById(id);
+  const txt = (v) => (v === null || v === undefined || v === '') ? '—' : String(v);
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  const pill = (t, cls) => mk('span', 'pill ' + cls, t);
+  const cnt = (arr, k, v) => arr.filter((r) => r[k] === v).length;
+
+  // ---------- Design rule summary ----------
+  const nb = cnt(rules, 'judge', '위배'), nw = cnt(rules, 'judge', '주의'), nk = cnt(rules, 'judge', '준수');
+  $('rs-bad').textContent = nb; $('rs-warn').textContent = nw; $('rs-ok').textContent = nk;
+  [['bad', nb], ['warn', nw], ['ok', nk]].forEach(([c, v]) => { const i = mk('i', c); i.style.width = (v / rules.length * 100) + '%'; $('rs-stack').appendChild(i); });
+  const violRisk = risk.filter((r) => r.rule_viol_n > 0);
+  const violHigh = violRisk.filter((r) => r.level_new === '높음').length;
+  $('rs-note').textContent = `전체 ${rules.length}개 Rule 중 ${nb}개 위배. 위배 Rule과 연결된 Risk ${violRisk.length}건 (그중 높음 ${violHigh}건).`;
+  rules.filter((r) => r.judge === '위배').sort((a, b) => (a.margin ?? -999) - (b.margin ?? -999)).slice(0, 5).forEach((r) => {
+    const li = mk('li');
+    li.appendChild(mk('span', 'id', r.rule_id));
+    li.appendChild(mk('span', '', r.rule));
+    const v = mk('span', 'v'); v.appendChild(document.createTextNode(r.limit + ' → ')); v.appendChild(mk('b', '', r.value)); li.appendChild(v);
+    $('rs-worst').appendChild(li);
+  });
+  document.querySelectorAll('.rc').forEach((b) => b.addEventListener('click', () => { rs.judge = b.dataset.j; drawRules(); drawSegs(); $('rules').scrollIntoView(); }));
+
+  // ---------- Top 3 ----------
+  const top3 = risk.slice().sort((a, b) => b.rpn_new - a.rpn_new || b.s_new - a.s_new).slice(0, 3);
+  top3.forEach((r, i) => {
+    const c = mk('article', 'card top');
+    const tr = mk('div', 'toprow'); tr.appendChild(mk('span', 'rank', (i + 1) + '위')); tr.appendChild(pill(r.level_new, LV[r.level_new])); c.appendChild(tr);
+    c.appendChild(mk('h3', '', r.failure_mode));
+    const rp = mk('div', 'rpn'); rp.appendChild(mk('span', 'big', r.rpn_new)); rp.appendChild(mk('span', 'was', 'RPN · 이전 세대 ' + r.rpn_prev)); c.appendChild(rp);
+    const dl = mk('dl');
+    const add = (k, v) => { dl.appendChild(mk('dt', '', k)); const d = mk('dd'); if (v instanceof Node) d.appendChild(v); else d.textContent = v; dl.appendChild(d); };
+    add('공정', r.step); add('변경 요인', r.drivers); add('영향', r.effect);
+    add('이전 세대 이력', 'NPI 불량 ' + r.prev_gen_events + '건');
+    add('위배 Rule', r.rule_viol);
+    const dn = mk('span'); dn.appendChild(pill(r.design_need, 'plain ' + NEED[r.design_need])); dn.appendChild(document.createTextNode(' ' + r.design_item)); add('신규 Design', dn);
+    c.appendChild(dl); $('top3-cards').appendChild(c);
+  });
+
+  // ---------- KPI ----------
+  const fresh = cnt(risk, 'source', '신규 추가');
+  const kp = [
+    ['높음', '<i class="dot bad"></i>', 'Risk 높음', cnt(risk, 'level_new', '높음'), `이전 세대 ${cnt(risk, 'level_prev', '높음')}건`, () => { st.level = '높음'; }],
+    ['보통', '<i class="dot warn"></i>', 'Risk 보통', cnt(risk, 'level_new', '보통'), `이전 세대 ${cnt(risk, 'level_prev', '보통')}건`, () => { st.level = '보통'; }],
+    ['낮음', '<i class="dot ok"></i>', 'Risk 낮음', cnt(risk, 'level_new', '낮음'), `이전 세대 ${cnt(risk, 'level_prev', '낮음')}건`, () => { st.level = '낮음'; }],
+    ['need', '', '신규 Design 항목 필요', cnt(risk, 'design_need', '필요'), `검토 필요 ${cnt(risk, 'design_need', '검토')}건 별도`, () => { st.level = ''; st.need = '필요'; }],
+    ['new', '', '신규 추가 Risk', fresh, '기존 FMEA에 없던 항목', null],
+  ];
+  kp.forEach(([, dot, lab, num, note, fn]) => {
+    const c = mk(fn ? 'button' : 'div', 'card kpi'); if (fn) c.type = 'button';
+    const l = mk('div', 'lab'); l.innerHTML = dot; l.appendChild(document.createTextNode(lab)); c.appendChild(l);
+    c.appendChild(mk('div', 'num', num)); c.appendChild(mk('div', 'note', note));
+    if (fn) c.addEventListener('click', () => { st.rule = false; fn(); $('f-need').value = st.need; drawSegs(); drawReg(); $('fmea').scrollIntoView(); });
+    $('kpi-cards').appendChild(c);
+  });
+
+  // ---------- spec ----------
+  spec.forEach((r) => {
+    const tr = mk('tr');
+    ['category', 'item', 'prev', 'new', 'change'].forEach((k) => tr.appendChild(mk('td', '', r[k])));
+    tr.appendChild(mk('td', 'wide', r.impact)); tr.appendChild(mk('td', '', r.basis));
+    $('spec-body').appendChild(tr);
+  });
+
+  // ---------- generic seg ----------
+  const seg = (el, items, get, set) => {
+    el.replaceChildren();
+    items.forEach(([val, label, n]) => {
+      const b = mk('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(get() === val));
+      b.appendChild(document.createTextNode(label)); if (n !== undefined) b.appendChild(mk('span', 'c', n));
+      b.addEventListener('click', () => set(val)); el.appendChild(b);
+    });
+  };
+
+  // ---------- rules table ----------
+  const rs = { judge: '', q: '', key: 'margin', dir: 1 };
+  const drawRules = () => {
+    const q = rs.q.trim().toLowerCase(); const b = $('rule-body'); b.replaceChildren();
+    let rows = rules.filter((r) => (!rs.judge || r.judge === rs.judge) && (!q || [r.rule_id, r.category, r.rule, r.related_fm, r.owner].join(' ').toLowerCase().includes(q)));
+    const order = { '위배': 0, '주의': 1, '준수': 2 };
+    rows = rows.slice().sort((a, b2) => {
+      const k = rs.key; let x = a[k], y = b2[k];
+      if (k === 'judge') { x = order[x]; y = order[y]; }
+      if (x === null || x === undefined) return 1; if (y === null || y === undefined) return -1;
+      const c = typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'ko');
+      return c * rs.dir || order[a.judge] - order[b2.judge];
+    });
+    $('rule-count').textContent = `${rows.length}개 표시 / 전체 ${rules.length}개 · 열 제목을 누르면 정렬됩니다.`;
+    rows.forEach((r) => {
+      const tr = mk('tr', r.judge === '위배' ? 'viol' : '');
+      tr.appendChild(mk('td', '', r.rule_id)); tr.appendChild(mk('td', '', r.category)); tr.appendChild(mk('td', 'wide', r.rule));
+      tr.appendChild(mk('td', '', r.limit)); tr.appendChild(mk('td', '', r.value));
+      tr.appendChild(mk('td', 'num', r.margin === null ? '—' : (r.margin > 0 ? '+' : '') + r.margin + '%'));
+      const j = mk('td'); j.appendChild(pill(r.judge, JG[r.judge])); tr.appendChild(j);
+      tr.appendChild(mk('td', 'mid', r.related_fm)); tr.appendChild(mk('td', 'wide', r.action)); tr.appendChild(mk('td', '', r.owner));
+      b.appendChild(tr);
+    });
+    document.querySelectorAll('#rule-tbl th').forEach((th) => { const bt = th.querySelector('button'); if (bt) th.setAttribute('aria-sort', bt.dataset.k === rs.key ? (rs.dir > 0 ? 'ascending' : 'descending') : 'none'); });
+  };
+  document.querySelectorAll('#rule-tbl th button').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.k; if (rs.key === k) rs.dir = -rs.dir; else { rs.key = k; rs.dir = 1; } drawRules();
+  }));
+  $('rule-q').addEventListener('input', (e) => { rs.q = e.target.value; drawRules(); });
+
+  // ---------- risk table ----------
+  const st = { level: '', need: '', rule: false, q: '', key: 'rpn_new', dir: -1 };
+  const ASC = ['fm_id', 'step', 'failure_mode', 'drivers'];
+  const drawSegs = () => {
+    seg($('lv-seg'), [['', '전체', risk.length], ['높음', '높음', cnt(risk, 'level_new', '높음')], ['보통', '보통', cnt(risk, 'level_new', '보통')], ['낮음', '낮음', cnt(risk, 'level_new', '낮음')]],
+      () => st.level, (v) => { st.level = v; drawSegs(); drawReg(); });
+    seg($('rule-seg'), [['', '전체', rules.length], ['위배', '위배', nb], ['주의', '주의', nw], ['준수', '준수', nk]], () => rs.judge, (v) => { rs.judge = v; drawSegs(); drawRules(); });
+  };
+  const drawReg = () => {
+    const q = st.q.trim().toLowerCase(); const b = $('reg-body'); b.replaceChildren();
+    let rows = risk.filter((r) => (!st.level || r.level_new === st.level) && (!st.need || r.design_need === st.need) && (!st.rule || r.rule_viol_n > 0) &&
+      (!q || [r.step, r.failure_mode, r.drivers, r.design_item, r.fm_id, r.rule_viol].join(' ').toLowerCase().includes(q)));
+    const k = st.key;
+    rows = rows.slice().sort((a, b2) => {
+      const x = a[k], y = b2[k];
+      if (x === null || x === undefined) return 1; if (y === null || y === undefined) return -1;
+      const c = typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'ko');
+      return c * st.dir || (b2.rpn_new - a.rpn_new);
+    });
+    $('reg-count').textContent = `${rows.length}개 표시 / 전체 ${risk.length}개 · 열 제목을 누르면 정렬됩니다. 왼쪽 선: 신규 추가 Risk.`;
+    rows.forEach((r) => {
+      const tr = mk('tr', r.source === '신규 추가' ? 'fresh' : '');
+      tr.appendChild(mk('td', '', r.fm_id));
+      const lv = mk('td'); lv.appendChild(pill(r.level_new, LV[r.level_new])); tr.appendChild(lv);
+      tr.appendChild(mk('td', 'mid', r.step)); tr.appendChild(mk('td', 'wide', r.failure_mode));
+      ['rpn_prev', 'rpn_new', 's_new', 'o_new', 'd_new'].forEach((c) => tr.appendChild(mk('td', 'num', txt(r[c]))));
+      tr.appendChild(mk('td', 'mid', r.drivers));
+      const rv = mk('td'); if (r.rule_viol_n) rv.appendChild(pill(r.rule_viol, 'lv-bad')); else rv.textContent = '-'; tr.appendChild(rv);
+      const dn = mk('td'); dn.appendChild(pill(r.design_need, 'plain ' + NEED[r.design_need])); tr.appendChild(dn);
+      tr.appendChild(mk('td', 'wide', r.design_item)); tr.appendChild(mk('td', 'wide', r.action));
+      b.appendChild(tr);
+    });
+    document.querySelectorAll('#reg-tbl th').forEach((th) => { const bt = th.querySelector('button'); if (bt) th.setAttribute('aria-sort', bt.dataset.k === st.key ? (st.dir > 0 ? 'ascending' : 'descending') : 'none'); });
+  };
+  document.querySelectorAll('#reg-tbl th button').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.k; if (st.key === k) st.dir = -st.dir; else { st.key = k; st.dir = ASC.includes(k) ? 1 : -1; } drawReg();
+  }));
+  $('f-need').addEventListener('change', (e) => { st.need = e.target.value; drawReg(); });
+  $('f-viol').addEventListener('change', (e) => { st.rule = e.target.checked; drawReg(); });
+  $('f-q').addEventListener('input', (e) => { st.q = e.target.value; drawReg(); });
+  drawSegs(); drawRules(); drawReg();
+
+  // ---------- chart ----------
+  const chartEl = $('rpn-chart'); const NS = 'http://www.w3.org/2000/svg';
+  const se = (p, tag, a) => { const e = document.createElementNS(NS, tag); Object.entries(a || {}).forEach(([k, v]) => e.setAttribute(k, v)); p.appendChild(e); return e; };
+  const col = (l) => l === '높음' ? 'var(--bad)' : l === '보통' ? 'var(--warn)' : 'var(--ok)';
+  const drawChart = () => {
+    chartEl.replaceChildren();
+    const rows = risk.filter((r) => r.rpn_prev !== null).sort((a, b) => b.rpn_new - a.rpn_new).slice(0, 10);
+    const W = Math.max(280, chartEl.clientWidth || 600), rowH = 44, top = 8, bottom = 28, padL = 10, padR = 44, H = top + rows.length * rowH + bottom;
+    const max = Math.ceil(Math.max(...rows.map((r) => r.rpn_new)) / 100) * 100; const x = (v) => padL + (v / max) * (W - padL - padR);
+    const svg = se(chartEl, 'svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', role: 'img', 'aria-label': 'RPN 변화 상위 10' });
+    for (let t = 0; t <= max; t += 100) {
+      se(svg, 'line', { x1: x(t), x2: x(t), y1: top, y2: H - bottom, stroke: 'var(--grid)' });
+      se(svg, 'text', { x: x(t), y: H - 10, 'text-anchor': t === 0 ? 'start' : 'middle', 'font-size': 11, fill: 'var(--muted)' }).textContent = t;
+    }
+    [THR.mid, THR.high].forEach((t) => se(svg, 'line', { x1: x(t), x2: x(t), y1: top, y2: H - bottom, stroke: 'var(--ref)', 'stroke-dasharray': '4 3' }));
+    const tip = mk('div', 'tip'); tip.hidden = true;
+    rows.forEach((r, i) => {
+      const y0 = top + i * rowH, yc = y0 + 30;
+      const lab = se(svg, 'text', { x: padL, y: y0 + 13, 'font-size': 12, fill: 'var(--fg)' }); lab.textContent = r.failure_mode;
+      let s = r.failure_mode; while (s.length > 4 && lab.getComputedTextLength() > W - padL - 6) { s = s.slice(0, -2); lab.textContent = s + '…'; }
+      se(svg, 'line', { x1: x(r.rpn_prev), x2: x(r.rpn_new), y1: yc, y2: yc, stroke: col(r.level_new), 'stroke-width': 2, 'stroke-linecap': 'round', opacity: .55 });
+      se(svg, 'circle', { cx: x(r.rpn_prev), cy: yc, r: 5, fill: 'var(--dotmuted)' });
+      se(svg, 'circle', { cx: x(r.rpn_new), cy: yc, r: 6.5, fill: col(r.level_new) });
+      se(svg, 'text', { x: x(r.rpn_new) + 12, y: yc + 4, 'font-size': 12, 'font-weight': 600, fill: 'var(--fg)' }).textContent = r.rpn_new;
+      const hit = se(svg, 'rect', { x: 0, y: y0, width: W, height: rowH, fill: 'transparent' });
+      hit.addEventListener('mousemove', (ev) => {
+        tip.hidden = false;
+        tip.replaceChildren(mk('div', 'muted', r.fm_id + ' · ' + r.step), mk('div', '', r.failure_mode), mk('div', '', `RPN ${r.rpn_prev} → ${r.rpn_new} (S${r.s_new} O${r.o_new} D${r.d_new})`), mk('div', 'muted', r.drivers));
+        const bb = chartEl.getBoundingClientRect();
+        tip.style.left = Math.min(ev.clientX - bb.left + 14, Math.max(0, bb.width - 260)) + 'px'; tip.style.top = (ev.clientY - bb.top + 14) + 'px';
+      });
+      hit.addEventListener('mouseleave', () => { tip.hidden = true; });
+    });
+    chartEl.appendChild(tip);
+  };
+  drawChart(); let w0 = chartEl.clientWidth;
+  new ResizeObserver(() => { if (chartEl.clientWidth !== w0) { w0 = chartEl.clientWidth; drawChart(); } }).observe(chartEl);
+})();
+</script>
+</body></html>
